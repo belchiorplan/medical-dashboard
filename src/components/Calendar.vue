@@ -1,20 +1,23 @@
 <template>
-  <div class="flex flex-col bg-white shadow-md rounded overflow-hidden">
+  <div class="flex flex-col bg-white rounded overflow-x-scroll">
     <table class="border-collapse w-full">
       <thead>
       <tr>
         <th colspan="1" class="px-4 py-2 border-t text-xs"></th>
-        <th v-for="(day, index) in weekDays" :key="index" class="px-4 py-2 border-t text-xs">{{ day }}</th>
+        <th v-for="(day, index) in filteredWeekdays" :key="index" class="px-4 py-2 border-t text-xs">{{ day }}</th>
       </tr>
       </thead>
       <tbody>
       <tr v-for="hour in hours" :key="hour">
-        <td class="px-4 py-2 border-b text-sm">{{ hour }}</td>
-        <td v-for="(day, index) in weekDays" :key="index" class="border border-gray-400 px-4 py-2">
+        <td class="px-4 py-2 border-b text-sm w-1/7">{{ hour }}</td>
+        <td v-for="(day, index) in filteredWeekdays" :key="index" class="border border-gray-400 px-4 py-2 w-1/7">
           <div v-for="appointment in filteredAppointments[day]" :key="appointment.id">
-            <div class="bg-blue-500 text-white shadow-md rounded p-2 mb-2">
-              <p v-if="patientData[appointment.patientId]">Patient: {{ patientData[appointment.patientId].name }}</p>
-              <p>Description: {{ appointment.description }}</p>
+            <div v-if="isEventAtHour(appointment, hour, day)" class="text-white shadow-md rounded p-2 mb-2"
+                 :class="selectColorAppointment(appointment.status)">
+              <p class="text-xs text-center"><b>Patient:</b> {{ this.searchPatient(appointment.patientId).name }}</p>
+              <p class="text-xs text-center"><b>Type:</b> {{ appointment.type }}</p>
+              <p class="text-xs text-center"><b>Status:</b> {{ appointment.status }}</p>
+              <p class="text-xs text-center">{{ appointment.description }}</p>
             </div>
           </div>
         </td>
@@ -25,63 +28,99 @@
 </template>
 
 <script>
-import axios from 'axios';
-
 export default {
+  props: ['appointmentsResponse', 'patientsResponse'],
   data() {
     return {
-      weekDays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-      appointments: [],
-      patientData: {}
+      weekdays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+      appointments: null,
+      patients: null
     };
+  },
+  watch: {
+    appointmentsResponse: {
+      handler(newVal) {
+        this.appointments = newVal;
+      },
+      immediate: true
+    },
+    patientsResponse: {
+      handler(newVal) {
+        this.patients = newVal;
+      },
+      immediate: true
+    }
   },
   computed: {
     hours() {
-      return Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
+      const startHour = 8;
+      const endHour = 20;
+      const interval = 30;
+
+      const hours = [];
+      for (let hour = startHour; hour <= endHour; hour++) {
+        for (let minute = 0; minute < 60; minute += interval) {
+          const hourFormatted = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          hours.push(hourFormatted);
+        }
+      }
+      return hours;
+    },
+    filteredWeekdays() {
+      // Retorna apenas os dias da semana de segunda a sexta
+      return this.weekdays.slice(1, 6); // Monday to Friday
     },
     filteredAppointments() {
       const filtered = {};
-      this.weekDays.forEach(day => {
-        filtered[day] = this.appointments.filter(appointment => new Date(appointment.startTime).getDay() === this.weekDays.indexOf(day) && appointment.status === 'pending');
+      const currentDate = new Date();
+      const firstDayOfWeek = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay())); // Primeiro dia da semana
+      const lastDayOfWeek = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay() + 6)); // Último dia da semana
+
+      this.weekdays.forEach(day => {
+        filtered[day] = this.appointments.filter(appointment => {
+          const appointmentDate = new Date(appointment.startTime);
+          return (
+              appointmentDate >= firstDayOfWeek && appointmentDate <= lastDayOfWeek &&
+              this.filteredWeekdays.includes(day)
+          );
+        });
       });
+
       return filtered;
-    },
-
-  },
-  methods: {
-    async fetchAppointments() {
-      try {
-        const [appointmentsResponse, patientsResponse] = await Promise.all([
-          axios.get('https://cm42-medical-dashboard.herokuapp.com/appointments'),
-          axios.get('https://cm42-medical-dashboard.herokuapp.com/patients')
-        ]);
-
-        this.appointments = appointmentsResponse.data;
-        this.patientData = patientsResponse.data.reduce((acc, patient) => {
-          acc[patient.id] = patient;
-          return acc;
-        }, {});
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    },
-    formatDate(dateString) {
-      return new Date(dateString).toLocaleString();
-    },
-    getWeekStart() {
-      const today = new Date();
-      const day = today.getDay();
-      const offset = day === 0 ? 6 : day - 1; // Adjust for Sunday as first day
-      return new Date(today.setDate(today.getDate() - offset));
-    },
-    getWeekEnd() {
-      const weekStart = this.getWeekStart();
-      weekStart.setDate(weekStart.getDate() + 6); // Add 6 days to get the end of the week
-      return weekStart;
     }
   },
-  mounted() {
-    this.fetchAppointments();
+  methods: {
+    isEventAtHour(appointment, hour, day) {
+      const appointmentStartTime = new Date(appointment.startTime);
+      const appointmentDay = appointmentStartTime.getDay();
+      const appointmentHour = appointmentStartTime.getHours();
+      const appointmentMinute = appointmentStartTime.getMinutes();
+      const [hourStr, minuteStr] = hour.split(':');
+      const hourInt = parseInt(hourStr, 10);
+      const minuteInt = parseInt(minuteStr, 10);
+      return (
+          appointmentDay === this.weekdays.indexOf(day) && // Verifica se o evento é no dia correto
+          appointmentHour === hourInt &&
+          appointmentMinute === minuteInt
+      );
+    },
+    searchPatient(patientId) {
+      return this.patients.find(patient => {
+        return patient.id === patientId;
+      });
+    },
+    selectColorAppointment(status) {
+      switch (status) {
+        case 'absent':
+          return 'bg-red-700';
+        case 'completed':
+          return 'bg-green-700';
+        case 'cancelled':
+          return 'bg-zinc-500';
+        default:
+          return 'bg-blue-500'; // nenhuma cor para outros status
+      }
+    }
   }
 };
 </script>

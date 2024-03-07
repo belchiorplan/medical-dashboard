@@ -1,88 +1,83 @@
 <template>
-  <div class="flex flex-col bg-white shadow-md rounded overflow-hidden">
-    <table class="border-collapse w-full">
+  <div class="flex flex-col bg-white rounded overflow-hidden">
+    <table class="border-collapse w-full" v-if="filteredAndSortedAppointments.length > 0">
       <thead>
-      <tr>
-        <th colspan="1" class="px-4 py-2 border-t text-xs"></th>
-        <th v-for="(day, index) in weekDays" :key="index" class="px-4 py-2 border-t text-xs">{{ day }}</th>
-      </tr>
       </thead>
       <tbody>
-      <tr v-for="hour in hours" :key="hour">
-        <td class="px-4 py-2 border-b text-sm">{{ hour }}</td>
-        <td v-for="(day, index) in weekDays" :key="index" class="border border-gray-400 px-4 py-2">
-          <div v-for="appointment in filteredAppointments[day]" :key="appointment.id">
-            <div class="bg-blue-500 text-white shadow-md rounded p-2 mb-2">
-              <p v-if="patientData[appointment.patientId]">Patient: {{ patientData[appointment.patientId].name }}</p>
-              <p>Description: {{ appointment.description }}</p>
-            </div>
-          </div>
-        </td>
-      </tr>
+        <tr class="border-b-2" v-for="appointment in filteredAndSortedAppointments" :key="appointment.id">
+          <td class="w-auto py-2 text-sm">{{ this.formatDate(appointment.startTime, appointment.endTime ?? null) }}</td>
+          <td class="w-auto y-2 text-sm text-center"><label class="rounded m-2 p-0.5 text-white bg-" :class="selectColorAppointment(appointment.status)">{{ appointment.status }}</label></td>
+          <td class="w-auto py-2 text-sm">{{ this.searchPatient(appointment.patientId).name }}</td>
+          <td class="w-auto py-2 text-sm">{{ appointment.type }}</td>
+        </tr>
       </tbody>
     </table>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
 
 export default {
+  props: ['appointmentsResponse', 'patientsResponse'],
   data() {
     return {
-      weekDays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-      appointments: [],
-      patientData: {}
+      appointments: null,
+      patients: null
     };
   },
-  computed: {
-    hours() {
-      return Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
+  watch: {
+    appointmentsResponse: {
+      handler(newVal) {
+        this.appointments = newVal;
+      },
+      immediate: true
     },
-    filteredAppointments() {
-      const filtered = {};
-      this.weekDays.forEach(day => {
-        filtered[day] = this.appointments.filter(appointment => new Date(appointment.startTime).getDay() === this.weekDays.indexOf(day) && appointment.status === 'pending');
-      });
-      return filtered;
-    },
-
-  },
-  methods: {
-    async fetchAppointments() {
-      try {
-        const [appointmentsResponse, patientsResponse] = await Promise.all([
-          axios.get('https://cm42-medical-dashboard.herokuapp.com/appointments'),
-          axios.get('https://cm42-medical-dashboard.herokuapp.com/patients')
-        ]);
-
-        this.appointments = appointmentsResponse.data;
-        this.patientData = patientsResponse.data.reduce((acc, patient) => {
-          acc[patient.id] = patient;
-          return acc;
-        }, {});
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    },
-    formatDate(dateString) {
-      return new Date(dateString).toLocaleString();
-    },
-    getWeekStart() {
-      const today = new Date();
-      const day = today.getDay();
-      const offset = day === 0 ? 6 : day - 1; // Adjust for Sunday as first day
-      return new Date(today.setDate(today.getDate() - offset));
-    },
-    getWeekEnd() {
-      const weekStart = this.getWeekStart();
-      weekStart.setDate(weekStart.getDate() + 6); // Add 6 days to get the end of the week
-      return weekStart;
+    patientsResponse: {
+      handler(newVal) {
+        this.patients = newVal;
+      },
+      immediate: true
     }
   },
-  mounted() {
-    this.fetchAppointments();
-  }
+  computed: {
+    filteredAndSortedAppointments() {
+      if (!this.appointments) return [];
+      return this.appointments
+                .filter(appointment => appointment.status !== 'pending')
+                .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+    }
+  },
+  methods: {
+    formatDate(startDateAppointments, endDateAppointments = null) {
+      const startDate = new Date(startDateAppointments);
+      const startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+
+      if (endDateAppointments) {
+        const endDate = new Date(endDateAppointments);
+        const endTime = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        return `${startDate.toLocaleDateString()} ${startTime} - ${endTime}`;
+      } else {
+        return `${startDate.toLocaleDateString()} ${startTime}`;
+      }
+    },
+    searchPatient (patientId) {
+      return this.patients.find(patient => {
+        return patient.id === patientId
+      })
+    },
+    selectColorAppointment(status) {
+      switch (status) {
+        case 'absent':
+          return 'bg-red-700';
+        case 'completed':
+          return 'bg-green-700';
+        case 'cancelled':
+          return 'bg-zinc-500';
+        default:
+          return ''; // nenhuma cor para outros status
+      }
+    }
+  },
 };
 </script>
 

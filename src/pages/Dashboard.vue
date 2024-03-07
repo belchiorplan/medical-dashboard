@@ -24,19 +24,18 @@
       <div class="w-full">
         <p class="text-xl font-semibold mb-4">Calendar</p>
         <div class="w-full bg-white border rounded-lg p-4 mb-8 xl:mb-0">
-          <Calendar></Calendar>
+          <CalendarComponent v-if="appointmentsResponse.length > 0 && patientsResponse.length > 0" :appointmentsResponse="appointmentsResponse" :patientsResponse="patientsResponse"></CalendarComponent>
         </div>
       </div>
 
     </div>
 
-    <div class="flex flex-wrap -mx-3">
+    <div class="flex flex-wrap -mx-3 ml-3 mr-3 mb-6">
 
       <div class="w-full">
         <p class="text-xl font-semibold mb-4">History</p>
-
         <div class="w-full bg-white border rounded-lg p-4 mb-8 xl:mb-0">
-
+          <HistoryComponent v-if="appointmentsResponse.length > 0 && patientsResponse.length > 0" :appointmentsResponse="appointmentsResponse" :patientsResponse="patientsResponse"></HistoryComponent>
         </div>
       </div>
 
@@ -46,12 +45,18 @@
 </template>
 
 <script>
-import Calendar from "@/components/Calendar.vue";
+import axios from 'axios';
+
+import CalendarComponent from "@/components/Calendar.vue";
+import HistoryComponent from "@/components/History.vue";
+
 export default {
   name: 'DashboardHome',
-  components: {Calendar},
+  components: { CalendarComponent, HistoryComponent },
   data() {
     return {
+      appointmentsResponse: [],
+      patientsResponse: [],
       buyersData: {
         type: 'line',
         data: {
@@ -128,7 +133,15 @@ export default {
       }
     }
   },
-  mounted () {
+  beforeMount () {
+    var _this = this;
+    axios.get('https://cm42-medical-dashboard.herokuapp.com/appointments').then(function (response) {
+      _this.appointmentsResponse = response.data;
+    });
+    axios.get('https://cm42-medical-dashboard.herokuapp.com/patients').then(function (response) {
+      // manipula o sucesso da requisição
+      _this.patientsResponse = response.data;
+    });
   }
 }
 </script>
