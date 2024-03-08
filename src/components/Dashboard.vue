@@ -19,7 +19,7 @@
 import Sidebar from './Sidebar.vue'
 
 export default {
-  name: 'Dashboard',
+  name: 'ComponentDashboard',
   components: {
     Sidebar
   }

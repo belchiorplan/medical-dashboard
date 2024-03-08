@@ -39,6 +39,7 @@
 
 <script>
 export default {
+  name: 'PatientsComponent',
   props: ['patientsResponse'],
   data() {
     return {

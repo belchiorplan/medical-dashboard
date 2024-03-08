@@ -1,12 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import DashboardView from '@/views/DashboardView.vue';
-import PatientsView from '@/views/PatientsView.vue';
 import PatientsDetailView from "@/views/PatientsDetailView.vue";
 
 // Constantes para os nomes das rotas
 const ROUTE_NAMES = {
   DASHBOARD_HOME: 'DashboardHome',
-  PATIENTS_HOME: 'PatientsHome',
   PATIENTS_DETAIL: 'PatientDetails',
 };
 

@@ -18,7 +18,7 @@
 
 <script>
 export default {
-  name: 'Navbar',
+  name: 'NavbarComponent',
   methods: {
     toggleSidebar() {
       this.$emit('toggle-sidebar');

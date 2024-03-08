@@ -113,7 +113,7 @@
 
 <script>
 export default {
-  name: 'PatientDetail',
+  name: 'PatientDetailComponent',
   props: ['patientId', 'appointmentId', 'patientsResponse', 'appointmentsResponse'],
   data() {
     return {

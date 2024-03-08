@@ -40,6 +40,7 @@
 
 <script>
 export default {
+  name: 'HistoryComponent',
   props: ['appointmentsResponse', 'patientsResponse'],
   data() {
     return {
