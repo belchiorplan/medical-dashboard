@@ -139,7 +139,6 @@ export default {
       _this.appointmentsResponse = response.data;
     });
     axios.get('https://cm42-medical-dashboard.herokuapp.com/patients').then(function (response) {
-      // manipula o sucesso da requisição
       _this.patientsResponse = response.data;
     });
   }

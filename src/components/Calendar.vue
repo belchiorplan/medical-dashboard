@@ -10,13 +10,13 @@
       <tbody>
       <tr v-for="hour in hours" :key="hour">
         <td class="px-4 py-2 border-b text-sm w-1/7">{{ hour }}</td>
-        <td v-for="(day, index) in filteredWeekdays" :key="index" class="border border-gray-400 px-4 py-2 w-1/7">
+        <td v-for="(day, index) in filteredWeekdays" :key="index" class="border border-gray-400 px-4 py-2 sm:w-1/5 md:w-1/7 lg:w-1/7 xl:w-1/7">
           <div v-for="appointment in filteredAppointments[day]" :key="appointment.id">
             <div v-if="isEventAtHour(appointment, hour, day)" class="text-white shadow-md rounded p-2 mb-2"
                  :class="selectColorAppointment(appointment.status)">
               <p class="text-xs text-center"><b>Patient:</b> {{ this.searchPatient(appointment.patientId).name }}</p>
-              <p class="text-xs text-center"><b>Type:</b> {{ appointment.type }}</p>
-              <p class="text-xs text-center"><b>Status:</b> {{ appointment.status }}</p>
+              <p class="text-xs text-center"><b>Type:</b> {{ this.appointmentType[appointment.type] }}</p>
+              <p class="text-xs text-center"><b>Status:</b> {{ this.status[appointment.status] }}</p>
               <p class="text-xs text-center">{{ appointment.description }}</p>
             </div>
           </div>
@@ -32,6 +32,19 @@ export default {
   props: ['appointmentsResponse', 'patientsResponse'],
   data() {
     return {
+      status: {
+        'pending': "Pending",
+        'completed': "Completed",
+        'cancelled': "Cancelled",
+        'absent': "Absent"
+      },
+      appointmentType: {
+        'firstVisit': "First Visit",
+        'followUp': "Follow Up",
+        'checkUp': "Check Up",
+        'exam': "Exam",
+        'surgery': "Surgery"
+      },
       weekdays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
       appointments: null,
       patients: null
@@ -53,8 +66,8 @@ export default {
   },
   computed: {
     hours() {
-      const startHour = 8;
-      const endHour = 20;
+      const startHour = 9;
+      const endHour = 18;
       const interval = 30;
 
       const hours = [];
@@ -118,7 +131,7 @@ export default {
         case 'cancelled':
           return 'bg-zinc-500';
         default:
-          return 'bg-blue-500'; // nenhuma cor para outros status
+          return 'bg-blue-500';
       }
     }
   }
@@ -126,5 +139,4 @@ export default {
 </script>
 
 <style scoped>
-/* Component styles */
 </style>

@@ -1,27 +1,29 @@
 <template>
   <div class="flex flex-col bg-white rounded overflow-hidden">
-    <table class="border-collapse w-full">
-      <thead>
-      <tr>
-        <td>ID</td>
-        <td>Name</td>
-        <td>Document</td>
-        <td>Health System ID</td>
-        <td>Insurance Plan</td>
-        <td>Birthday</td>
-      </tr>
-      </thead>
-      <tbody>
-      <tr class="border-b-2" v-for="patient in paginatedPatients" :key="patient.id">
-        <td class="w-auto py-2">{{ patient.id }}</td>
-        <td class="w-auto py-2">{{ patient.name }}</td>
-        <td class="w-auto py-2">{{ patient.document }}</td>
-        <td class="w-auto py-2">{{ patient.healthSystemId }}</td>
-        <td class="w-auto py-2">{{ patient.insurancePlan }}</td>
-        <td class="w-auto py-2 text-sm">{{ formatDate(patient.birthday) }}</td>
-      </tr>
-      </tbody>
-    </table>
+    <div class="overflow-x-auto">
+      <table class="border-collapse w-full">
+        <thead>
+        <tr>
+          <th class="px-6 py-3 bg-gray-100 text-left">ID</th>
+          <th class="px-6 py-3 bg-gray-100 text-left">Name</th>
+          <th class="px-6 py-3 bg-gray-100 text-left">Document</th>
+          <th class="px-6 py-3 bg-gray-100 text-left">Health System ID</th>
+          <th class="px-6 py-3 bg-gray-100 text-left">Insurance Plan</th>
+          <th class="px-6 py-3 bg-gray-100 text-left">Birthday</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="patient in paginatedPatients" :key="patient.id" @click="redirectToPatientDetails(patient.id)" class="border-b-2 hover:bg-gray-200 cursor-pointer">
+          <td class="px-6 py-4">{{ patient.id }}</td>
+          <td class="px-6 py-4">{{ patient.name }}</td>
+          <td class="px-6 py-4">{{ patient.document }}</td>
+          <td class="px-6 py-4">{{ patient.healthSystemId }}</td>
+          <td class="px-6 py-4">{{ patient.insurancePlan }}</td>
+          <td class="px-6 py-4">{{ formatDate(patient.birthday) }}</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
 
     <!-- Pagination -->
     <div class="flex justify-center mt-4">
@@ -57,7 +59,7 @@ export default {
   computed: {
     totalPages() {
       if (!this.patients) {
-        return 0; // ou qualquer outro valor padrão que faça sentido no seu contexto
+        return 0;
       }
       return Math.ceil(this.patients.length / this.pageSize);
     },
@@ -65,7 +67,6 @@ export default {
       if (!this.patients) {
         return [];
       }
-
       const startIndex = (this.currentPage - 1) * this.pageSize;
       const endIndex = startIndex + this.pageSize;
       return this.patients.slice(startIndex, endIndex);
@@ -93,11 +94,17 @@ export default {
       if (this.currentPage > 1) {
         this.currentPage--;
       }
+    },
+    redirectToPatientDetails(patientId) {
+      this.$router.push({ name: 'PatientDetails', params: { patientId: patientId } });
     }
   }
 };
 </script>
 
 <style scoped>
-/* Estilos do componente */
+tbody tr:hover {
+  cursor: pointer;
+  background-color: #f3f4f6;
+}
 </style>
