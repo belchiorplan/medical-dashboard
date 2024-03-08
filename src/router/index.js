@@ -19,11 +19,6 @@ const router = createRouter({
       name: ROUTE_NAMES.DASHBOARD_HOME
     },
     {
-      path: '/patients',
-      component: PatientsView,
-      name: ROUTE_NAMES.PATIENTS_HOME
-    },
-    {
       path: '/patient/:patientId/:appointmentId?',
       name: ROUTE_NAMES.PATIENTS_DETAIL,
       component: PatientsDetailView,

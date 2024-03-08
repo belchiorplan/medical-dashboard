@@ -4,15 +4,20 @@
       <thead>
       <tr>
         <th colspan="1" class="px-4 py-2 border-t text-xs"></th>
-        <th v-for="(day, index) in filteredWeekdays" :key="index" class="px-4 py-2 border-t text-xs">{{ day }}</th>
+        <th v-for="(day, index) in filteredWeekdays" :key="index" class="px-4 py-2 border-t text-xs"
+            style="min-width: 200px">{{ day }}
+        </th>
       </tr>
       </thead>
       <tbody>
       <tr v-for="hour in hours" :key="hour">
-        <td class="px-4 py-2 border-b text-sm w-1/7">{{ hour }}</td>
-        <td v-for="(day, index) in filteredWeekdays" :key="index" class="border border-gray-400 px-4 py-2 sm:w-1/5 md:w-1/7 lg:w-1/7 xl:w-1/7">
-          <div v-for="appointment in filteredAppointments[day]" :key="appointment.id">
-            <div v-if="isEventAtHour(appointment, hour, day)" class="text-white shadow-md rounded p-2 mb-2"
+        <td class="px-4 py-2 text-sm w-1/7 bg-gray-600 sm:bg-gray-600 text-white">{{ hour }}</td>
+        <td v-for="(day, index) in filteredWeekdays" :key="index"
+            class="border border-gray-400 px-4 py-2 sm:w-1/5 md:w-1/7 lg:w-1/7 xl:w-1/7">
+          <div v-for="appointment in filteredAppointments[day]" :key="appointment.id"
+               @click="redirectToPatientDetails(appointment.patientId, appointment.id)">
+            <div v-if="isEventAtHour(appointment, hour, day)"
+                 class="text-white shadow-md rounded p-2 mb-2 cursor-pointer"
                  :class="selectColorAppointment(appointment.status)">
               <p class="text-xs text-center"><b>Patient:</b> {{ this.searchPatient(appointment.patientId).name }}</p>
               <p class="text-xs text-center"><b>Type:</b> {{ this.appointmentType[appointment.type] }}</p>
@@ -133,10 +138,30 @@ export default {
         default:
           return 'bg-blue-500';
       }
+    },
+    redirectToPatientDetails(patientId, appointmentId) {
+      this.$router.push({name: 'PatientDetails', params: {patientId: patientId, appointmentId: appointmentId}});
     }
   }
 };
 </script>
 
 <style scoped>
+@media only screen and (max-width: 768px) {
+  th:first-child,
+  td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    width: 50px;
+  }
+
+  tr {
+    min-height: 100px;
+  }
+
+  td:not(:first-child) {
+    padding-left: 50px;
+  }
+}
 </style>

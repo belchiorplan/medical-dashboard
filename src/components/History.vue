@@ -11,10 +11,15 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="appointment in paginatedAppointments" :key="appointment.id" class="border-b-2 hover:bg-gray-200 cursor-pointer">
+        <tr v-for="appointment in paginatedAppointments" :key="appointment.id"
+            class="border-b-2 hover:bg-gray-200 cursor-pointer"
+            @click="redirectToPatientDetails(appointment.patientId, appointment.id)">
           <td class="px-6 py-4">{{ searchPatient(appointment.patientId).name }}</td>
           <td class="px-6 py-4">{{ formatDate(appointment.startTime, appointment.endTime ?? null) }}</td>
-          <td class="px-6 py-4"><span class="p-2 rounded text-white" :class="selectColorAppointment(appointment.status)">{{ this.status[appointment.status] }}</span></td>
+          <td class="px-6 py-4"><span class="p-2 rounded text-white"
+                                      :class="selectColorAppointment(appointment.status)">{{
+              this.status[appointment.status]
+            }}</span></td>
           <td class="px-6 py-4">{{ this.appointmentType[appointment.type] }}</td>
         </tr>
         </tbody>
@@ -138,6 +143,9 @@ export default {
         default:
           return ''; // nenhuma cor para outros status
       }
+    },
+    redirectToPatientDetails(patientId, appointmentId) {
+      this.$router.push({name: 'PatientDetails', params: {patientId: patientId, appointmentId: appointmentId}});
     }
   }
 };
